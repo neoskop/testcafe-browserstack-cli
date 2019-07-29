@@ -1,0 +1,8 @@
+{
+    "compilerOptions": {
+      "moduleResolution": "node",
+      "esModuleInterop": true
+    },
+    "include": ["types/testcafe.d.ts", "**/*"]
+  }
+  
