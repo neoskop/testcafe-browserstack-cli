@@ -2,7 +2,7 @@
   "name": "testcafe-browserstack-cli",
   "version": "0.1.1",
   "description": "cli-tool to run testcafe tests local or in browserstack",
-  "main": "./bin/index.ts",
+  "main": "./bin/index.js",
   "repository": "https://neoskop.de",
   "author": "Noel Bank <bank@neoskop.de>",
   "license": "MIT",
