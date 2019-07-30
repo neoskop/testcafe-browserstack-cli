@@ -109,16 +109,16 @@ function getBrowserList(providerName) {
                 case 1:
                     provider = _a.sent();
                     return [4 /*yield*/, provider.getBrowserList()];
-                case 2: return [2 /*return*/, (_a.sent()).map(function (name) { return ({ title: name, value: name }); })];
+                case 2: return [2 /*return*/, (_a.sent()).map(function (name) { return ({ title: name, value: "" + (providerName != 'locally-installed' ? providerName + ":" : '') + name }); })];
             }
         });
     });
 }
 function getData() {
     return __awaiter(this, void 0, void 0, function () {
-        var response, browser, _a, _b, liveMode, _c, envs;
-        return __generator(this, function (_d) {
-            switch (_d.label) {
+        var response, browserName, _a, _b, liveMode, envs;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
                 case 0: return [4 /*yield*/, prompts_1["default"]([{
                             type: 'select',
                             name: 'testfile',
@@ -134,7 +134,7 @@ function getData() {
                             ].concat(config.provider.map(function (provider) { return ({ title: provider, value: provider }); }))
                         }])];
                 case 1:
-                    response = _d.sent();
+                    response = _c.sent();
                     if (!response)
                         return [2 /*return*/];
                     _a = prompts_1["default"];
@@ -144,14 +144,13 @@ function getData() {
                         message: 'Select Browser'
                     };
                     return [4 /*yield*/, getBrowserList(response.provider)];
-                case 2: return [4 /*yield*/, _a.apply(void 0, [(_b.choices = _d.sent(),
+                case 2: return [4 /*yield*/, _a.apply(void 0, [(_b.choices = _c.sent(),
                             _b)])];
                 case 3:
-                    browser = _d.sent();
-                    if (!browser)
+                    browserName = _c.sent();
+                    if (!browserName)
                         return [2 /*return*/];
-                    _c = response.provider === 'locally-installed';
-                    if (!_c) return [3 /*break*/, 5];
+                    if (!(response.provider === 'locally-installed')) return [3 /*break*/, 5];
                     return [4 /*yield*/, prompts_1["default"]({
                             type: 'toggle',
                             name: 'liveMode',
@@ -161,16 +160,14 @@ function getData() {
                             inactive: 'no'
                         })];
                 case 4:
-                    _c = (_d.sent());
-                    _d.label = 5;
-                case 5:
-                    liveMode = _c;
+                    liveMode = _c.sent();
                     if (!liveMode)
                         return [2 /*return*/];
-                    return [4 /*yield*/, prompts_1["default"](config.env)];
+                    _c.label = 5;
+                case 5: return [4 /*yield*/, prompts_1["default"](config.env)];
                 case 6:
-                    envs = _d.sent();
-                    return [2 /*return*/, __assign({}, response, browser, liveMode, { envs: envs })];
+                    envs = _c.sent();
+                    return [2 /*return*/, __assign({}, response, browserName, { liveMode: liveMode ? liveMode : false, envs: envs })];
             }
         });
     });
@@ -186,6 +183,9 @@ function executeScript() {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, getData().then(function (data) {
+                        console.log('data:', data);
+                        if (!data)
+                            return;
                         if (!data.browser) {
                             console.log('no browser');
                             return;
