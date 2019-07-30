@@ -42,6 +42,10 @@ create config file `.testcafe-cli.json`:
 
 for each env you can create one specific question which set as env variabels .
 
+## known issues
+
+browerstack doesent work localy.
+
 ## License
 
 This project is under the terms of the Apache License, Version 2.0. A [copy of this license](LICENSE) is included with the sources.

@@ -15,7 +15,7 @@ const config: IConfig = {
             name: "SUITE",
             message: "Select Suite",
             choices: [
-                { title: "Local", value: "local" },
+                { title: "Local works not with browserstack", value: "local" },
                 { title: "Stage", value: "stage" },
                 { title: "Live", value: "live" }
             ]
@@ -23,7 +23,7 @@ const config: IConfig = {
     ],
     vars: {
         BROWSERSTACK_USERNAME: '',
-        BROWSERSTACK_ACCESS_KEY: ''
+        BROWSERSTACK_ACCESS_KEY: '',
     },
     ...getConfig()
 };
@@ -34,7 +34,7 @@ interface IConfig {
     testsFolder: string;
     provider: string[];
     env: PromptObject[]
-    vars: { [key: string]: string }
+    vars: { [key: string]: string | boolean }
 }
 
 function getConfig(): Partial<IConfig> {
@@ -92,9 +92,8 @@ async function getData() {
 
     if (!browserName) return
 
-    let liveMode: Answers<'liveMode'>;
+    let liveMode = { liveMode: false };
     if (response.provider === 'locally-installed') {
-
         liveMode = await prompts({
             type: 'toggle',
             name: 'liveMode',
@@ -105,10 +104,9 @@ async function getData() {
         })
         if (!liveMode) return
     }
-
     const envs = await prompts(config.env)
 
-    return { ...response, ...browserName, liveMode: liveMode ? liveMode : false, envs };
+    return { ...response, ...browserName, ...liveMode, envs };
 }
 
 function setEnvs(envs) {
@@ -134,12 +132,14 @@ async function executeScript() {
             return
         }
 
-
         setEnvs({ ...data.envs, ...config.vars })
 
 
         createTestCafe('localhost', 1337, 1338)
             .then(tc => {
+
+                console.log(data.liveMode);
+
                 const runner = data.liveMode
                     ? tc.createLiveModeRunner()
                     : tc.createRunner();

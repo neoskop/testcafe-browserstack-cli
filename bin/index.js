@@ -68,7 +68,7 @@ var config = __assign({ testsFolder: "tests", provider: ["browserstack"], env: [
             name: "SUITE",
             message: "Select Suite",
             choices: [
-                { title: "Local", value: "local" },
+                { title: "Local works not with browserstack", value: "local" },
                 { title: "Stage", value: "stage" },
                 { title: "Live", value: "live" }
             ]
@@ -150,6 +150,7 @@ function getData() {
                     browserName = _c.sent();
                     if (!browserName)
                         return [2 /*return*/];
+                    liveMode = { liveMode: false };
                     if (!(response.provider === 'locally-installed')) return [3 /*break*/, 5];
                     return [4 /*yield*/, prompts_1["default"]({
                             type: 'toggle',
@@ -167,7 +168,7 @@ function getData() {
                 case 5: return [4 /*yield*/, prompts_1["default"](config.env)];
                 case 6:
                     envs = _c.sent();
-                    return [2 /*return*/, __assign({}, response, browserName, { liveMode: liveMode ? liveMode : false, envs: envs })];
+                    return [2 /*return*/, __assign({}, response, browserName, liveMode, { envs: envs })];
             }
         });
     });
@@ -197,6 +198,7 @@ function executeScript() {
                         setEnvs(__assign({}, data.envs, config.vars));
                         testcafe_1["default"]('localhost', 1337, 1338)
                             .then(function (tc) {
+                            console.log(data.liveMode);
                             var runner = data.liveMode
                                 ? tc.createLiveModeRunner()
                                 : tc.createRunner();
