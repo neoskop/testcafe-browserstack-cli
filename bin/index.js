@@ -80,7 +80,7 @@ var config = __assign({ testsFolder: "tests", provider: ["browserstack"], env: [
 var testcafe;
 function getConfig() {
     try {
-        return require(__dirname + "/.testcafe-cli.json");
+        return require(path_1["default"].resolve('.testcafe-cli.json'));
     }
     catch (_a) {
         return {};
@@ -184,7 +184,6 @@ function executeScript() {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, getData().then(function (data) {
-                        console.log('data:', data);
                         if (!data)
                             return;
                         if (!data.browser) {
@@ -198,7 +197,6 @@ function executeScript() {
                         setEnvs(__assign({}, data.envs, config.vars));
                         testcafe_1["default"]('localhost', 1337, 1338)
                             .then(function (tc) {
-                            console.log(data.liveMode);
                             var runner = data.liveMode
                                 ? tc.createLiveModeRunner()
                                 : tc.createRunner();

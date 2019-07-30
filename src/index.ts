@@ -39,7 +39,7 @@ interface IConfig {
 
 function getConfig(): Partial<IConfig> {
     try {
-        return require(`${__dirname}/.testcafe-cli.json`);
+        return require(path.resolve('.testcafe-cli.json'));
     } catch {
         return {};
     }
@@ -118,7 +118,6 @@ function setEnvs(envs) {
 
 async function executeScript() {
     await getData().then(data => {
-        console.log('data:', data);
 
         if (!data) return;
 
@@ -137,8 +136,6 @@ async function executeScript() {
 
         createTestCafe('localhost', 1337, 1338)
             .then(tc => {
-
-                console.log(data.liveMode);
 
                 const runner = data.liveMode
                     ? tc.createLiveModeRunner()
