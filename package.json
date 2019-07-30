@@ -3,6 +3,11 @@
   "version": "1.0.6",
   "description": "cli-tool to run testcafe tests",
   "main": "./bin/index.js",
+  "keywords": [
+    "testcafe",
+    "cli-tool",
+    "testcafe-cli"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/neoskop/testcafe-browserstack-cli.git"
