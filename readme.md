@@ -2,22 +2,6 @@
 
 Run testcafe tests in a beautiful cli with optinal providers.
 
-## Requirements
-
-### Folder structure for tests:
-
-```
-test/
-├── test1/
-|   └── test.ts
-├── test2/
-|   ├── test.ts
-|   └── test.stage.ts
-└── test3/
-    ├── test.ts
-    └── test.live.ts
-```
-
 ## Usage
 
 install an NPM package:
