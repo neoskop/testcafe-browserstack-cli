@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import prompts, { PromptObject } from 'prompts';
+import prompts, { PromptObject, Answers } from 'prompts';
 import createTestCafe from 'testcafe';
 import * as providerPool from 'testcafe/lib/browser/provider/pool';
 
@@ -62,7 +62,7 @@ function getFiles(dir: any, files_?: any) {
 async function getBrowserList(providerName: string) {
     const provider = await providerPool.getProvider(providerName);
 
-    return (await provider.getBrowserList()).map((name: string) => ({ title: name, value: name }));
+    return (await provider.getBrowserList()).map((name: string) => ({ title: name, value: `${providerName != 'locally-installed' ? `${providerName}:` : ''}${name}` }));
 }
 
 async function getData() {
@@ -83,27 +83,32 @@ async function getData() {
     }]);
     if (!response) return
 
-    const browser = await prompts({
+    const browserName = await prompts({
         type: 'autocomplete',
         name: 'browser',
         message: 'Select Browser',
         choices: await getBrowserList(response.provider),
     })
-    if (!browser) return
 
-    const liveMode = response.provider === 'locally-installed' && await prompts({
-        type: 'toggle',
-        name: 'liveMode',
-        message: 'Live Mode?',
-        initial: false,
-        active: 'yes',
-        inactive: 'no',
-    })
-    if (!liveMode) return
+    if (!browserName) return
+
+    let liveMode: Answers<'liveMode'>;
+    if (response.provider === 'locally-installed') {
+
+        liveMode = await prompts({
+            type: 'toggle',
+            name: 'liveMode',
+            message: 'Live Mode?',
+            initial: false,
+            active: 'yes',
+            inactive: 'no',
+        })
+        if (!liveMode) return
+    }
 
     const envs = await prompts(config.env)
 
-    return { ...response, ...browser, ...liveMode, envs };
+    return { ...response, ...browserName, liveMode: liveMode ? liveMode : false, envs };
 }
 
 function setEnvs(envs) {
@@ -115,6 +120,9 @@ function setEnvs(envs) {
 
 async function executeScript() {
     await getData().then(data => {
+        console.log('data:', data);
+
+        if (!data) return;
 
         if (!data.browser) {
             console.log('no browser');
