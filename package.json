@@ -24,7 +24,7 @@
   },
   "scripts": {
     "build": "tsc src/index.ts --outDir bin --esModuleInterop",
-    "start": "yarn ts-node "
+    "start": "yarn ts-node src/index.ts"
   },
   "bin": {
     "testcafe-cli": "./bin/index.js"
