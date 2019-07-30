@@ -2,14 +2,47 @@
 
 import fs from 'fs';
 import path from 'path';
-import prompts from 'prompts';
+import prompts, { PromptObject } from 'prompts';
 import createTestCafe from 'testcafe';
 import * as providerPool from 'testcafe/lib/browser/provider/pool';
-import { resolve } from 'url';
-
+const config: IConfig = {
+    testsFolder: "tests",
+    provider: ["browserstack"],
+    env: [
+        {
+            type: "select",
+            name: "SUITE",
+            message: "Select Suite",
+            choices: [
+                { title: "Local", "value": "local" },
+                { title: "Stage", "value": "stage" },
+                { title: "Live", "value": "live" }
+            ]
+        }
+    ],
+    vars: {
+        BROWSERSTACK_USERNAME: '',
+        BROWSERSTACK_ACCESS_KEY: ''
+    },
+    ...getConfig()
+};
 
 let testcafe: TestCafe;
-let availableBrowsers: any = { local: [], browserstack: [] };
+
+interface IConfig {
+    testsFolder: string;
+    provider: string[];
+    env: PromptObject[]
+    vars: { [key: string]: string }
+}
+
+function getConfig(): Partial<IConfig> {
+    try {
+        return require(`${__dirname}/.testcafe-cli.json`);
+    } catch {
+        return {};
+    }
+}
 
 function getFiles(dir: any, files_?: any) {
     files_ = files_ || [];
@@ -25,117 +58,93 @@ function getFiles(dir: any, files_?: any) {
     return files_;
 }
 
-async function getBrowserList() {
-    const locallcyProvider = await providerPool.getProvider('locally-installed');
-    const browserstackProvider = await providerPool.getProvider('browserstack');
+async function getBrowserList(providerName: string) {
+    const provider = await providerPool.getProvider(providerName);
 
-    availableBrowsers = {
-        local: (await locallcyProvider.getBrowserList()).map((name: string) => {
-            return { title: name, value: name };
-        }),
-        browserstack: (await browserstackProvider.getBrowserList()).map(
-            (name: string) => {
-                return { title: name, value: `browserstack:${name}` };
-            }
-        ),
-    };
+    return (await provider.getBrowserList()).map((name: string) => ({ title: name, value: name }));
 }
 
-const files: string[] = getFiles(path.resolve('tests'));
-
-const filesAsArray = files.map((file: string) => {
-    return { title: file, value: file };
-});
-
 async function getData() {
-    await getBrowserList();
-
-    const testFiles = await prompts({
+    const response = await prompts([{
         type: 'select',
-        name: 'value',
+        name: 'testfile',
         message: 'Select Testfile',
-        choices: filesAsArray,
-    });
-    if (!testFiles) return;
-
-    const provider = await prompts({
+        choices: getFiles(path.resolve(config.testsFolder)).map((file: string) => ({ title: file, value: file }))
+    },
+    {
         type: 'select',
-        name: 'value',
+        name: 'provider',
         message: 'Select Provider',
         choices: [
-            { title: 'Local', value: 'local' },
-            { title: 'Browserstack', value: 'browserstack' },
+            { title: 'locally-installed', value: 'locally-installed' },
+            ...config.provider.map((provider: string) => ({ title: provider, value: provider }))
         ],
-    });
-    if (!provider) return;
+    }]);
+    if (!response) return
 
-    const browsers = await prompts({
+    const browser = await prompts({
         type: 'autocomplete',
-        name: 'value',
+        name: 'browser',
         message: 'Select Browser',
-        choices: availableBrowsers[provider.value],
-    });
-    if (!browsers) return;
+        choices: await getBrowserList(response.provider),
+    })
+    if (!browser) return
 
-    const suite = await prompts({
-        type: 'select',
-        name: 'value',
-        message: 'Select Suite',
-        choices: [
-            { title: 'Local', value: 'local' },
-            { title: 'Stage', value: 'stage' },
-            { title: 'Live', value: 'live' },
-        ],
-    });
-    if (!suite) return;
-    let runner: { value: boolean } = { value: false };
+    const liveMode = response.provider === 'locally-installed' && await prompts({
+        type: 'toggle',
+        name: 'liveMode',
+        message: 'Live Mode?',
+        initial: false,
+        active: 'yes',
+        inactive: 'no',
+    })
+    if (!liveMode) return
 
-    if (provider.value === 'local') {
-        runner = await prompts({
-            type: 'toggle',
-            name: 'value',
-            message: 'Live Mode?',
-            initial: false,
-            active: 'yes',
-            inactive: 'no',
-        });
-        if (!runner) return;
-    }
+    const envs = await prompts(config.env)
 
-    return {
-        browsers: browsers.value,
-        testFiles: testFiles.value,
-        suite: suite.value,
-        runner: runner.value,
-    };
+    return { ...response, ...browser, ...liveMode, envs };
+}
+
+function setEnvs(envs) {
+    const keys = Object.keys(envs)
+    keys.forEach((key, _idx) => {
+        process.env[key] = envs[key]
+    })
 }
 
 async function executeScript() {
     await getData().then(data => {
-        if (data && data.browsers && data.testFiles && data.suite) {
-            process.env.SUITE = data.suite;
-            process.env.BROWSERSTACK_USERNAME = process.env.BROWSERSTACK_USERNAME;
-            process.env.BROWSERSTACK_ACCESS_KEY = process.env.BROWSERSTACK_ACCESS_KEY;
 
-
-            createTestCafe('localhost', 1337, 1338)
-                .then(tc => {
-                    const runner = data.runner
-                        ? tc.createLiveModeRunner()
-                        : tc.createRunner();
-
-                    return runner
-                        .src(data.testFiles)
-                        .browsers(data.browsers)
-                        .run();
-                })
-                .then(() => {
-                    if (testcafe) testcafe.close();
-                    process.exit(0);
-                });
-        } else {
-            console.error('something went wrong');
+        if (!data.browser) {
+            console.log('no browser');
+            return
         }
+
+        if (!data.testfile) {
+            console.log('no testfile');
+            return
+        }
+
+
+        setEnvs({ ...data.envs, ...config.vars })
+
+
+        createTestCafe('localhost', 1337, 1338)
+            .then(tc => {
+                const runner = data.liveMode
+                    ? tc.createLiveModeRunner()
+                    : tc.createRunner();
+
+                return runner
+                    .src(data.testfile)
+                    .browsers(data.browser)
+                    .run();
+            })
+            .then(() => {
+                if (testcafe) testcafe.close();
+                process.exit(0);
+            });
+
     });
 }
 

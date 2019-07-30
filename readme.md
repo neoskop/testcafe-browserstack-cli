@@ -1,6 +1,6 @@
-# testcafe-browserstack-cli 💎
+# testcafe-cli 💎
 
-Run testcafe tests in a beautiful cli.
+Run testcafe tests in a beautiful cli with optinal providers.
 
 ## Requirements
 
@@ -22,10 +22,7 @@ test/
 
 install an NPM package:
 
-`$ yarn add -G @neoskop/testcafe-browserstack-cli`
-
-add local env variables:
-`$ export BROWSERSTACK_USERNAME=<username> && export BROWSERSTACK_ACCESS_KEY=<key>`
+`$ yarn add -G @neoskop/testcafe-cli`
 
 and run the CLI directly:
 
@@ -33,7 +30,33 @@ and run the CLI directly:
 
 ### Additional
 
-u can use the local variable `process.env.SUITE` with state `<'local'|'stage'|'live'>`
+create config file `.testcafe-cli.json`:
+
+```json
+{
+  "testsFolder": "tests",
+  "provider": ["browserstack"],
+  "env": [
+    {
+      "type": "select",
+      "name": "SUITE",
+      "message": "Select Suite",
+      "choices": [
+        { "title": "Local", "value": "local" },
+        { "title": "Stage", "value": "stage" },
+        { "title": "Live", "value": "live" }
+      ]
+    }
+  ],
+  "vars": {
+    "BROWSERSTACK_USERNAME": "",
+    "BROWSERSTACK_ACCESS_KEY": "",
+    "your_env_vars": "your_env_value"
+  }
+}
+```
+
+for each env you can create one specific question.
 
 ## License
 

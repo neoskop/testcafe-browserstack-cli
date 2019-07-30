@@ -1,7 +1,7 @@
 {
   "name": "testcafe-browserstack-cli",
-  "version": "0.1.2",
-  "description": "cli-tool to run testcafe tests local or in browserstack",
+  "version": "1.0.0",
+  "description": "cli-tool to run testcafe tests",
   "main": "./bin/index.js",
   "repository": "https://neoskop.de",
   "author": "Noel Bank <bank@neoskop.de>",
@@ -19,7 +19,8 @@
     "typescript": "3.5.3"
   },
   "scripts": {
-    "build": "tsc -p . --outDir bin"
+    "build": "tsc -p . --outDir bin",
+    "start": "yarn ts-node "
   },
   "bin": {
     "testcafe-cli": "./bin/index.js"
