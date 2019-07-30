@@ -3,7 +3,11 @@
   "version": "1.0.5",
   "description": "cli-tool to run testcafe tests",
   "main": "./bin/index.js",
-  "repository": "https://neoskop.de",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neoskop/testcafe-browserstack-cli.git"
+  },
+  "homepage": "https://neolabs.io",
   "author": "Noel Bank <bank@neoskop.de>",
   "license": "MIT",
   "private": false,
