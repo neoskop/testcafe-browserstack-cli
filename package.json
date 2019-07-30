@@ -1,6 +1,6 @@
 {
   "name": "@neoskop/testcafe-browserstack-cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "cli-tool to run testcafe tests",
   "main": "./bin/index.js",
   "repository": "https://neoskop.de",
