@@ -40,7 +40,7 @@ create config file `.testcafe-cli.json`:
 }
 ```
 
-for each env you can create one specific question.
+for each env you can create one specific question which set as env variabels .
 
 ## License
 

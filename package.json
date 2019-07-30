@@ -19,7 +19,7 @@
     "typescript": "3.5.3"
   },
   "scripts": {
-    "build": "tsc -p . --outDir bin",
+    "build": "tsc src/index.ts --outDir bin --esModuleInterop",
     "start": "yarn ts-node "
   },
   "bin": {

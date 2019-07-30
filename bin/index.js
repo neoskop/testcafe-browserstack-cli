@@ -1,5 +1,16 @@
 #!/usr/bin/env node
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -51,8 +62,30 @@ var path_1 = __importDefault(require("path"));
 var prompts_1 = __importDefault(require("prompts"));
 var testcafe_1 = __importDefault(require("testcafe"));
 var providerPool = __importStar(require("testcafe/lib/browser/provider/pool"));
+var config = __assign({ testsFolder: "tests", provider: ["browserstack"], env: [
+        {
+            type: "select",
+            name: "SUITE",
+            message: "Select Suite",
+            choices: [
+                { title: "Local", value: "local" },
+                { title: "Stage", value: "stage" },
+                { title: "Live", value: "live" }
+            ]
+        }
+    ], vars: {
+        BROWSERSTACK_USERNAME: '',
+        BROWSERSTACK_ACCESS_KEY: ''
+    } }, getConfig());
 var testcafe;
-var availableBrowsers = { local: [], browserstack: [] };
+function getConfig() {
+    try {
+        return require(__dirname + "/.testcafe-cli.json");
+    }
+    catch (_a) {
+        return {};
+    }
+}
 function getFiles(dir, files_) {
     files_ = files_ || [];
     var files = fs_1["default"].readdirSync(dir);
@@ -67,116 +100,85 @@ function getFiles(dir, files_) {
     }
     return files_;
 }
-function getBrowserList() {
+function getBrowserList(providerName) {
     return __awaiter(this, void 0, void 0, function () {
-        var locallcyProvider, browserstackProvider, _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0: return [4 /*yield*/, providerPool.getProvider('locally-installed')];
+        var provider;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, providerPool.getProvider(providerName)];
                 case 1:
-                    locallcyProvider = _b.sent();
-                    return [4 /*yield*/, providerPool.getProvider('browserstack')];
-                case 2:
-                    browserstackProvider = _b.sent();
-                    _a = {};
-                    return [4 /*yield*/, locallcyProvider.getBrowserList()];
-                case 3:
-                    _a.local = (_b.sent()).map(function (name) {
-                        return { title: name, value: name };
-                    });
-                    return [4 /*yield*/, browserstackProvider.getBrowserList()];
-                case 4:
-                    availableBrowsers = (_a.browserstack = (_b.sent()).map(function (name) {
-                        return { title: name, value: "browserstack:" + name };
-                    }),
-                        _a);
-                    return [2 /*return*/];
+                    provider = _a.sent();
+                    return [4 /*yield*/, provider.getBrowserList()];
+                case 2: return [2 /*return*/, (_a.sent()).map(function (name) { return ({ title: name, value: name }); })];
             }
         });
     });
 }
-var files = getFiles(path_1["default"].resolve('tests'));
-var filesAsArray = files.map(function (file) {
-    return { title: file, value: file };
-});
 function getData() {
     return __awaiter(this, void 0, void 0, function () {
-        var testFiles, provider, browsers, suite, runner;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, getBrowserList()];
-                case 1:
-                    _a.sent();
-                    return [4 /*yield*/, prompts_1["default"]({
+        var response, browser, _a, _b, liveMode, _c, envs;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
+                case 0: return [4 /*yield*/, prompts_1["default"]([{
                             type: 'select',
-                            name: 'value',
+                            name: 'testfile',
                             message: 'Select Testfile',
-                            choices: filesAsArray
-                        })];
-                case 2:
-                    testFiles = _a.sent();
-                    if (!testFiles)
-                        return [2 /*return*/];
-                    return [4 /*yield*/, prompts_1["default"]({
+                            choices: getFiles(path_1["default"].resolve(config.testsFolder)).map(function (file) { return ({ title: file, value: file }); })
+                        },
+                        {
                             type: 'select',
-                            name: 'value',
+                            name: 'provider',
                             message: 'Select Provider',
                             choices: [
-                                { title: 'Local', value: 'local' },
-                                { title: 'Browserstack', value: 'browserstack' },
-                            ]
-                        })];
+                                { title: 'locally-installed', value: 'locally-installed' }
+                            ].concat(config.provider.map(function (provider) { return ({ title: provider, value: provider }); }))
+                        }])];
+                case 1:
+                    response = _d.sent();
+                    if (!response)
+                        return [2 /*return*/];
+                    _a = prompts_1["default"];
+                    _b = {
+                        type: 'autocomplete',
+                        name: 'browser',
+                        message: 'Select Browser'
+                    };
+                    return [4 /*yield*/, getBrowserList(response.provider)];
+                case 2: return [4 /*yield*/, _a.apply(void 0, [(_b.choices = _d.sent(),
+                            _b)])];
                 case 3:
-                    provider = _a.sent();
-                    if (!provider)
+                    browser = _d.sent();
+                    if (!browser)
                         return [2 /*return*/];
-                    return [4 /*yield*/, prompts_1["default"]({
-                            type: 'autocomplete',
-                            name: 'value',
-                            message: 'Select Browser',
-                            choices: availableBrowsers[provider.value]
-                        })];
-                case 4:
-                    browsers = _a.sent();
-                    if (!browsers)
-                        return [2 /*return*/];
-                    return [4 /*yield*/, prompts_1["default"]({
-                            type: 'select',
-                            name: 'value',
-                            message: 'Select Suite',
-                            choices: [
-                                { title: 'Local', value: 'local' },
-                                { title: 'Stage', value: 'stage' },
-                                { title: 'Live', value: 'live' },
-                            ]
-                        })];
-                case 5:
-                    suite = _a.sent();
-                    if (!suite)
-                        return [2 /*return*/];
-                    runner = { value: false };
-                    if (!(provider.value === 'local')) return [3 /*break*/, 7];
+                    _c = response.provider === 'locally-installed';
+                    if (!_c) return [3 /*break*/, 5];
                     return [4 /*yield*/, prompts_1["default"]({
                             type: 'toggle',
-                            name: 'value',
+                            name: 'liveMode',
                             message: 'Live Mode?',
                             initial: false,
                             active: 'yes',
                             inactive: 'no'
                         })];
-                case 6:
-                    runner = _a.sent();
-                    if (!runner)
+                case 4:
+                    _c = (_d.sent());
+                    _d.label = 5;
+                case 5:
+                    liveMode = _c;
+                    if (!liveMode)
                         return [2 /*return*/];
-                    _a.label = 7;
-                case 7: return [2 /*return*/, {
-                        browsers: browsers.value,
-                        testFiles: testFiles.value,
-                        suite: suite.value,
-                        runner: runner.value
-                    }];
+                    return [4 /*yield*/, prompts_1["default"](config.env)];
+                case 6:
+                    envs = _d.sent();
+                    return [2 /*return*/, __assign({}, response, browser, liveMode, { envs: envs })];
             }
         });
+    });
+}
+function setEnvs(envs) {
+    var keys = Object.keys(envs);
+    keys.forEach(function (key, _idx) {
+        process.env[key] = envs[key];
     });
 }
 function executeScript() {
@@ -184,29 +186,30 @@ function executeScript() {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, getData().then(function (data) {
-                        if (data && data.browsers && data.testFiles && data.suite) {
-                            process.env.SUITE = data.suite;
-                            process.env.BROWSERSTACK_USERNAME = process.env.BROWSERSTACK_USERNAME;
-                            process.env.BROWSERSTACK_ACCESS_KEY = process.env.BROWSERSTACK_ACCESS_KEY;
-                            testcafe_1["default"]('localhost', 1337, 1338)
-                                .then(function (tc) {
-                                var runner = data.runner
-                                    ? tc.createLiveModeRunner()
-                                    : tc.createRunner();
-                                return runner
-                                    .src(data.testFiles)
-                                    .browsers(data.browsers)
-                                    .run();
-                            })
-                                .then(function () {
-                                if (testcafe)
-                                    testcafe.close();
-                                process.exit(0);
-                            });
+                        if (!data.browser) {
+                            console.log('no browser');
+                            return;
                         }
-                        else {
-                            console.error('something went wrong');
+                        if (!data.testfile) {
+                            console.log('no testfile');
+                            return;
                         }
+                        setEnvs(__assign({}, data.envs, config.vars));
+                        testcafe_1["default"]('localhost', 1337, 1338)
+                            .then(function (tc) {
+                            var runner = data.liveMode
+                                ? tc.createLiveModeRunner()
+                                : tc.createRunner();
+                            return runner
+                                .src(data.testfile)
+                                .browsers(data.browser)
+                                .run();
+                        })
+                            .then(function () {
+                            if (testcafe)
+                                testcafe.close();
+                            process.exit(0);
+                        });
                     })];
                 case 1:
                     _a.sent();

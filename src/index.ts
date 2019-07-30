@@ -5,6 +5,7 @@ import path from 'path';
 import prompts, { PromptObject } from 'prompts';
 import createTestCafe from 'testcafe';
 import * as providerPool from 'testcafe/lib/browser/provider/pool';
+
 const config: IConfig = {
     testsFolder: "tests",
     provider: ["browserstack"],
@@ -14,9 +15,9 @@ const config: IConfig = {
             name: "SUITE",
             message: "Select Suite",
             choices: [
-                { title: "Local", "value": "local" },
-                { title: "Stage", "value": "stage" },
-                { title: "Live", "value": "live" }
+                { title: "Local", value: "local" },
+                { title: "Stage", value: "stage" },
+                { title: "Live", value: "live" }
             ]
         }
     ],
